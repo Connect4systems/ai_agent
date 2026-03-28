@@ -1,0 +1,3 @@
+include MANIFEST.in
+include requirements.txt
+recursive-include ai_assistant *.json *.js *.css *.html *.md *.txt

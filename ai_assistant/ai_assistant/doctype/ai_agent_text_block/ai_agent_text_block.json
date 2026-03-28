@@ -1,0 +1,96 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-03-15 00:00:00",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "language",
+  "priority",
+  "column_break_apaj",
+  "enabled",
+  "quick",
+  "suggest",
+  "section_break_fuwf",
+  "text_block"
+ ],
+ "fields": [
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled"
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "label": "Title",
+   "reqd": 1
+  },
+  {
+   "default": "detect",
+   "fieldname": "language",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "label": "Language",
+   "options": "detect\nar\nen"
+  },
+  {
+   "default": "10",
+   "fieldname": "priority",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "label": "Priority"
+  },
+  {
+   "fieldname": "text_block",
+   "fieldtype": "Text",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "label": "Text Block",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "quick",
+   "fieldtype": "Check",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Quick"
+  },
+  {
+   "fieldname": "column_break_apaj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "suggest",
+   "fieldtype": "Check",
+   "label": "Suggest"
+  },
+  {
+   "fieldname": "section_break_fuwf",
+   "fieldtype": "Section Break"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-03-21 13:47:18.977904",
+ "modified_by": "Administrator",
+ "module": "AI Assistant",
+ "name": "AI Agent Text Block",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "priority",
+ "sort_order": "ASC",
+ "states": []
+}

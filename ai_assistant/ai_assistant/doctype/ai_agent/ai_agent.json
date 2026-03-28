@@ -1,0 +1,205 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:agent_name",
+ "creation": "2026-01-01 00:00:00",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "enabled",
+  "agent_name",
+  "title",
+  "is_default",
+  "allow_widget_access",
+  "column_break_kkfd",
+  "description",
+  "access_section",
+  "allowed_roles",
+  "behavior_section",
+  "include_workflows",
+  "include_permissions",
+  "require_data_source_policy",
+  "max_db_rows",
+  "max_tool_doctypes",
+  "column_break_behavior",
+  "default_answer_mode",
+  "agent_instruction_block",
+  "learning_text_blocks_section",
+  "learning_text_blocks",
+  "data_source_section",
+  "system_prompt",
+  "data_sources"
+ ],
+ "fields": [
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled"
+  },
+  {
+   "fieldname": "agent_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Agent Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_default",
+   "fieldtype": "Check",
+   "label": "Default Agent"
+  },
+  {
+   "default": "1",
+   "description": "When enabled, users with allowed roles can open and use the chat widget.",
+   "fieldname": "allow_widget_access",
+   "fieldtype": "Check",
+   "label": "Allow Widget Access"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  },
+  {
+   "fieldname": "access_section",
+   "fieldtype": "Section Break",
+   "label": "Widget Access Roles"
+  },
+  {
+   "description": "Only users with one of these roles can use this agent. Leave empty to allow all system users.",
+   "fieldname": "allowed_roles",
+   "fieldtype": "Table",
+   "label": "AI Roles",
+   "options": "AI Role"
+  },
+  {
+   "fieldname": "behavior_section",
+   "fieldtype": "Section Break",
+   "label": "Agent Behavior"
+  },
+  {
+   "default": "1",
+   "fieldname": "include_workflows",
+   "fieldtype": "Check",
+   "label": "Include Workflow Information"
+  },
+  {
+   "default": "1",
+   "fieldname": "include_permissions",
+   "fieldtype": "Check",
+   "label": "Include User Permissions"
+  },
+  {
+   "default": "0",
+   "description": "When enabled, the query broker will only use DocTypes listed in Data Sources.",
+   "fieldname": "require_data_source_policy",
+   "fieldtype": "Check",
+   "label": "Require Data Source Allowlist"
+  },
+  {
+   "default": "summary",
+   "fieldname": "default_answer_mode",
+   "fieldtype": "Select",
+   "label": "Default Answer Mode",
+   "options": "guide\nsummary\ngeneral"
+  },
+  {
+   "fieldname": "column_break_behavior",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "20",
+   "fieldname": "max_db_rows",
+   "fieldtype": "Int",
+   "label": "Max DB Rows per Query"
+  },
+  {
+   "default": "3",
+   "fieldname": "max_tool_doctypes",
+   "fieldtype": "Int",
+   "label": "Max DocTypes per Question"
+  },
+  {
+   "default": "You are a smart, friendly, and professional ERP assistant working on behalf of the company.\nAlways reply in the same language the user writes in \u2014 Arabic, English, Chinese, or any other detected language.\nAddress the user by their first name with the honorific Mr. (e.g. Mr. Ahmad) when greeting or when it feels natural.\nBe warm, clear, and concise. Avoid robotic or overly formal phrasing.\n\nYou have direct access to the live ERPNext database for this company.\nUse DocType records, workflows, and permissions to answer live-data questions (transactions, balances, statuses, counts, amounts).\nFor product guidance or how-to questions, draw on Frappe / ERPNext / HRMS platform knowledge and the official documentation at https://frappe.io/erpnext/.\n\nPay attention to how the user phrases questions and what topics come up repeatedly \u2014 use this to personalise answers and anticipate follow-up needs.\nMap common ERP synonyms, plural forms, and small spelling mistakes to the correct DocTypes.\nPrefer one best-matching DocType per question.\nAsk one short clarifying question only when the context is genuinely insufficient.\nNever invent transactions, balances, records, or permissions.",
+   "fieldname": "agent_instruction_block",
+   "fieldtype": "Text",
+   "label": "Agent Instruction Block"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "learning_text_blocks_section",
+   "fieldtype": "Section Break",
+   "label": "Learning Text Blocks"
+  },
+  {
+   "description": "Reusable text blocks used to teach this agent behavior by context, language, and priority.",
+   "fieldname": "learning_text_blocks",
+   "fieldtype": "Table",
+   "label": "Learning Text Blocks",
+   "options": "AI Agent Text Block"
+  },
+  {
+   "fieldname": "system_prompt",
+   "fieldtype": "Text",
+   "label": "System Prompt Override"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "data_source_section",
+   "fieldtype": "Section Break",
+   "label": "Data Sources"
+  },
+  {
+   "fieldname": "data_sources",
+   "fieldtype": "Table",
+   "label": "Data Sources",
+   "options": "AI Agent Data Source"
+  },
+  {
+   "fieldname": "column_break_kkfd",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Title"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-03-21 13:39:47.954173",
+ "modified_by": "Administrator",
+ "module": "AI Assistant",
+ "name": "AI Agent",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "AI Admin"
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "agent_name",
+ "track_changes": 1
+}
