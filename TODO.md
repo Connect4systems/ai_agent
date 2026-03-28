@@ -4,6 +4,9 @@
 - [x] Add deterministic backend handling for Arabic region/area questions to return explicit area lists.
 - [x] Improve interactive UX by ensuring structured, clickable options when suitable.
 - [x] Validate updated response behavior for requested Arabic "regions" style questions.
-- [ ] Add global data-first fallback guard for broad question types to avoid generic empty replies.
-- [ ] Add deterministic project-intent handler (new project) with structured actionable data output.
-- [ ] Add backend tests for generic/business prompts to enforce data-backed structured replies.
+- [x] Add global data-first fallback guard for broad question types to avoid generic empty replies.
+- [x] Add deterministic project-intent handler (new project) with structured actionable data output.
+- [x] Add backend tests for generic/business prompts to enforce data-backed structured replies.
+- [ ] Fix sales aggregates to avoid "غير متوفر" by using robust field fallback logic.
+- [ ] Add deterministic monthly/yearly sales answer path for Arabic/English prompts.
+- [ ] Add tests for sales month/year and Sales Order value this year scenarios.

@@ -561,6 +561,54 @@ class TestHardeningHelpers(unittest.TestCase):
         self.assertIn("Sales Order Aggregate (this year): no submitted records found", context)
         _frappe_stub.get_list.side_effect = None
 
+    def test_build_sales_totals_context_this_month_uses_month_window(self):
+        def _get_list(doctype, **kwargs):
+            if doctype != "Sales Invoice":
+                return []
+
+            rows = [
+                {"name": "SI-0010", "grand_total": 2000, "net_total": 1800, "currency": "EGP"},
+            ]
+            start = int(kwargs.get("start", 0) or 0)
+            page_length = int(kwargs.get("page_length", len(rows)) or len(rows))
+            return rows[start:start + page_length]
+
+        _frappe_stub.get_list.side_effect = _get_list
+        with patch.object(chat, "_has_read_permission", return_value=True):
+            context = chat._build_sales_totals_context(
+                question="monthly sales",
+                user="test@example.com",
+                max_scan_rows=2000,
+            )
+
+        self.assertIn("Sales Invoice Aggregate (this month)", context)
+        self.assertIn("sum_grand_total=2000.00, sum_net_total=1800.00", context)
+        _frappe_stub.get_list.side_effect = None
+
+    def test_build_sales_totals_context_net_fallback_uses_grand_when_net_missing(self):
+        def _get_list(doctype, **kwargs):
+            if doctype != "Sales Order":
+                return []
+
+            rows = [
+                {"name": "SO-0100", "base_grand_total": 2500, "base_net_total": None, "net_total": None, "currency": "EGP"},
+            ]
+            start = int(kwargs.get("start", 0) or 0)
+            page_length = int(kwargs.get("page_length", len(rows)) or len(rows))
+            return rows[start:start + page_length]
+
+        _frappe_stub.get_list.side_effect = _get_list
+        with patch.object(chat, "_has_read_permission", return_value=True):
+            context = chat._build_sales_totals_context(
+                question="كم قيمة اوامر البيع هذة السنة",
+                user="test@example.com",
+                max_scan_rows=2000,
+            )
+
+        self.assertIn("Sales Order Aggregate", context)
+        self.assertIn("sum_grand_total=2500.00, sum_net_total=2500.00", context)
+        _frappe_stub.get_list.side_effect = None
+
     def test_build_sales_totals_context_for_sales_order(self):
         def _get_list(doctype, **kwargs):
             if doctype != "Sales Order":
@@ -581,7 +629,7 @@ class TestHardeningHelpers(unittest.TestCase):
 
         self.assertIn("Sales Order Aggregate (2025)", context)
         self.assertIn("submitted_order_count=1", context)
-        self.assertIn("sum_grand_total=2500.00, sum_net_total=0.00", context)
+        self.assertIn("sum_grand_total=2500.00, sum_net_total=2500.00", context)
         _frappe_stub.get_list.side_effect = None
 
     def test_detect_doctype_word_boundary_no_partial_match(self):

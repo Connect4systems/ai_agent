@@ -1509,6 +1509,7 @@ def _extract_year_window_from_question(question: str) -> tuple[str, str, str] | 
             or "current year" in q
             or "هذا العام" in q
             or "هذه السنة" in q
+            or "هذة السنة" in q
             or "العام الحالي" in q
             or "العام الحالى" in q
             or "السنة الحالية" in q
@@ -1524,6 +1525,31 @@ def _extract_year_window_from_question(question: str) -> tuple[str, str, str] | 
 
     year = int(year_match.group(1))
     return (str(year), f"{year}-01-01", f"{year}-12-31")
+
+
+def _extract_month_window_from_question(question: str) -> tuple[str, str, str] | None:
+    """Extract month-like period from question and return (label, start_date, end_date)."""
+    q = (question or "").lower()
+
+    month_tokens = (
+        "this month",
+        "current month",
+        "monthly sales",
+        "sales this month",
+        "مبيعات الشهر",
+        "هذا الشهر",
+        "الشهر الحالي",
+        "شهري",
+    )
+    if not any(token in q for token in month_tokens):
+        return None
+
+    try:
+        today = frappe.utils.getdate()
+        start_date = today.replace(day=1)
+        return ("this month", str(start_date), str(today))
+    except Exception:
+        return None
 
 
 def _looks_like_sales_total_question(question: str) -> bool:
@@ -1547,6 +1573,9 @@ def _looks_like_sales_total_question(question: str) -> bool:
         "annual sales",
         "sales performance",
         "sales summary",
+        "monthly sales",
+        "sales this month",
+        "sales month",
         "مبيعات",
         "المبيعات",
         "اجمالي المبيعات",
@@ -1584,6 +1613,12 @@ def _looks_like_sales_total_question(question: str) -> bool:
         "قيمة",
         "سنوي",
         "سنوية",
+        "شهري",
+        "شهرية",
+        "this month",
+        "current month",
+        "هذا الشهر",
+        "الشهر الحالي",
         "ملخص",
         "أداء",
     )
@@ -1610,6 +1645,10 @@ def _resolve_sales_aggregate_targets(question: str) -> list[tuple[str, str, str]
         "أمر بيع",
         "اوامر بيع",
         "أوامر بيع",
+        "اوامر البيع",
+        "أوامر البيع",
+        "اوامر المبيعات",
+        "أوامر المبيعات",
     )
     generic_sales_tokens = (
         "total sales",
@@ -1632,8 +1671,36 @@ def _resolve_sales_aggregate_targets(question: str) -> list[tuple[str, str, str]
     if wants_order:
         targets.append(("Sales Order", "transaction_date", "submitted_order_count"))
 
+    month_tokens = (
+        "this month",
+        "current month",
+        "monthly sales",
+        "sales this month",
+        "sales month",
+        "مبيعات الشهر",
+        "هذا الشهر",
+        "الشهر الحالي",
+    )
+    year_tokens = (
+        "this year",
+        "current year",
+        "last year",
+        "هذا العام",
+        "هذه السنة",
+        "هذة السنة",
+        "العام الحالي",
+        "العام الماضي",
+        "السنة الماضية",
+    )
+    period_sales_tokens = month_tokens + year_tokens
+
     if not targets and wants_generic_sales:
         # Default generic "total sales" requests to both Sales Invoices and Sales Orders.
+        targets.append(("Sales Invoice", "posting_date", "submitted_invoice_count"))
+        targets.append(("Sales Order", "transaction_date", "submitted_order_count"))
+
+    if not targets and any(token in q for token in period_sales_tokens):
+        # Period-specific sales prompts should still resolve deterministic totals.
         targets.append(("Sales Invoice", "posting_date", "submitted_invoice_count"))
         targets.append(("Sales Order", "transaction_date", "submitted_order_count"))
 
@@ -2232,13 +2299,15 @@ def _build_ledger_totals_context(question: str, user: str, max_scan_rows: int) -
 def _build_sales_totals_context(question: str, user: str, max_scan_rows: int) -> str:
     """Build deterministic, permission-aware sales aggregate context blocks."""
     if not _looks_like_sales_total_question(question):
-        return ""
+        period_probe = _extract_month_window_from_question(question) or _extract_year_window_from_question(question)
+        if not period_probe:
+            return ""
 
     targets = _resolve_sales_aggregate_targets(question)
     if not targets:
         return ""
 
-    period = _extract_year_window_from_question(question)
+    period = _extract_month_window_from_question(question) or _extract_year_window_from_question(question)
     if period:
         label = period[0]
         start_date = period[1]
@@ -2285,7 +2354,7 @@ def _build_sales_totals_context(question: str, user: str, max_scan_rows: int) ->
                 rows = frappe.get_list(
                     doctype,
                     filters=filters,
-                    fields=["name", "base_grand_total", "grand_total", "net_total", "currency"],
+                    fields=["name", "base_grand_total", "grand_total", "base_net_total", "net_total", "currency"],
                     order_by=f"{date_field} asc",
                     start=scanned,
                     page_length=page_length,
@@ -2303,7 +2372,11 @@ def _build_sales_totals_context(question: str, user: str, max_scan_rows: int) ->
                     except (TypeError, ValueError):
                         pass
 
-                    net_amount = row.get("net_total")
+                    net_amount = row.get("base_net_total")
+                    if net_amount in (None, ""):
+                        net_amount = row.get("net_total")
+                    if net_amount in (None, ""):
+                        net_amount = amount
                     try:
                         total_net += float(net_amount or 0)
                     except (TypeError, ValueError):
