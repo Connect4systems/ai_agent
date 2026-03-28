@@ -1019,6 +1019,21 @@ class TestSendMessage(unittest.TestCase):
         self.assertEqual(result["actions"][0]["action"], "open_doctype")
         self.assertEqual(result["actions"][0]["doctype"], "Sales Order")
 
+    def test_new_project_question_returns_structured_data_first_reply(self):
+        self._setup_common_mocks()
+
+        with patch.object(
+            chat,
+            "_get_user_permitted_doctype_index",
+            return_value=[{"doctype": "Project", "module": "Projects"}],
+        ), patch.object(chat, "_call_ai", side_effect=AssertionError("AI call must be skipped for deterministic project intent")):
+            result = chat.send_message("عندي مشروع جديد", session_id="s1", language_hint="ar")
+
+        self.assertIn("لبدء مشروع جديد", result["reply"])
+        self.assertIn("اسم المشروع", result["reply"])
+        self.assertIn("خطوات التنفيذ داخل النظام", result["reply"])
+        self.assertEqual(result["actions"], [])
+
     def test_open_report_request_returns_action(self):
         self._setup_common_mocks()
 

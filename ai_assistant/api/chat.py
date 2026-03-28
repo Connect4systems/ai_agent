@@ -2603,6 +2603,93 @@ def _build_regions_recommendation_reply(question: str, language_hint: str | None
     )
 
 
+def _is_new_project_question(question: str) -> bool:
+    """Return True when user asks to start/create a new project."""
+    q = str(question or "").lower().strip()
+    if not q:
+        return False
+
+    project_tokens = ("project", "new project", "start project", "create project", "مشروع", "مشروع جديد", "ابدأ مشروع", "انشاء مشروع", "إنشاء مشروع")
+    return any(token in q for token in project_tokens)
+
+
+def _build_new_project_structured_reply(question: str, language_hint: str | None = None) -> str:
+    """Return structured, actionable reply for new-project intents."""
+    prefers_ar = _question_contains_arabic(question) or _normalize_language_hint(language_hint) == "ar"
+
+    if prefers_ar:
+        return (
+            "لبدء مشروع جديد بشكل صحيح، هذه البيانات المطلوبة:\n"
+            "- اسم المشروع\n"
+            "- العميل/الجهة\n"
+            "- تاريخ البداية وتاريخ النهاية المتوقع\n"
+            "- الميزانية التقديرية\n"
+            "- مدير المشروع والفريق\n"
+            "- نطاق العمل (Scope) والنتائج المطلوبة\n\n"
+            "خطوات التنفيذ داخل النظام:\n"
+            "1) افتح Project وأنشئ سجل جديد.\n"
+            "2) أدخل بيانات المشروع الأساسية.\n"
+            "3) أضف المهام الرئيسية (Tasks) وحدد المسؤوليات والمواعيد.\n"
+            "4) اربط المشروع بالعميل/المبيعات/المشتريات عند الحاجة.\n"
+            "5) تابع التقدم والتكلفة الفعلية مقابل الميزانية.\n\n"
+            "حالة البيانات الحالية: لا يمكنني تأكيد وجود مشروع محدد من رسالتك الحالية فقط.\n"
+            "أرسل اسم المشروع أو العميل الآن لأعطيك خطة تنفيذ جاهزة مباشرة."
+        )
+
+    return (
+        "To start a new project properly, provide:\n"
+        "- Project name\n"
+        "- Customer/party\n"
+        "- Start date and expected end date\n"
+        "- Estimated budget\n"
+        "- Project manager and team\n"
+        "- Scope and expected deliverables\n\n"
+        "Execution steps in the system:\n"
+        "1) Open Project and create a new record.\n"
+        "2) Fill core project details.\n"
+        "3) Add major tasks with owners and deadlines.\n"
+        "4) Link project to sales/purchase/customer context when needed.\n"
+        "5) Track progress and actual cost vs budget.\n\n"
+        "Current data status: I cannot confirm a specific project from the current message alone.\n"
+        "Share the project name or customer now and I will generate a ready-to-use execution plan."
+    )
+
+
+def _build_data_first_fallback_reply(
+    question: str,
+    language_hint: str | None = None,
+    mentioned_doctypes: list[str] | None = None,
+) -> str:
+    """Return non-generic structured fallback when no deterministic path was triggered."""
+    prefers_ar = _question_contains_arabic(question) or _normalize_language_hint(language_hint) == "ar"
+    doctype_label = ", ".join([str(dt) for dt in (mentioned_doctypes or []) if str(dt).strip()][:3])
+
+    if prefers_ar:
+        return (
+            "ملاحظتي على سؤالك:\n"
+            f"- السؤال: {question.strip()}\n"
+            f"- النطاق المحتمل في النظام: {doctype_label or 'غير محدد'}\n"
+            "- البيانات المباشرة المتاحة من الرسالة الحالية: غير كافية لإخراج نتيجة رقمية دقيقة.\n\n"
+            "لإعطائك إجابة مبنية على بيانات فعلية، أرسل أحد التالي:\n"
+            "- اسم المستند (DocType) المطلوب (مثل: Project / Lead / Sales Order)\n"
+            "- أو اسم السجل/العميل/الفترة الزمنية\n"
+            "- أو المطلوب بالضبط (عدد، إجمالي، حالة، أعلى العناصر)\n\n"
+            "بمجرد إرسال ذلك، سأرجع لك النتيجة بصيغة واضحة تحتوي البيانات المطلوبة مباشرة."
+        )
+
+    return (
+        "Data-first status for your question:\n"
+        f"- Question: {question.strip()}\n"
+        f"- Potential scope: {doctype_label or 'not specified'}\n"
+        "- Direct data from current message: insufficient for a precise numeric/result output.\n\n"
+        "To return a concrete data-backed answer, send one of:\n"
+        "- target DocType (e.g., Project / Lead / Sales Order)\n"
+        "- record/customer name or date range\n"
+        "- exact output type (count, total, status, top items)\n\n"
+        "Once shared, I will return the required data in a clear structured format."
+    )
+
+
 def _build_user_stats_context(question: str, user: str) -> str:
     """Return authoritative active/disabled user counts, excluding system accounts."""
     if not _is_user_stats_question(question):
@@ -3806,11 +3893,17 @@ def send_message(
     region_handled = _is_regions_recommendation_question(question)
     region_reply = _build_regions_recommendation_reply(question, language_hint=language_hint) if region_handled else ""
 
+    project_handled = _is_new_project_question(question)
+    project_reply = _build_new_project_structured_reply(question, language_hint=language_hint) if project_handled else ""
+
     if nav_handled:
         reply = nav_reply
         actions = nav_actions
     elif region_handled:
         reply = region_reply
+        actions = []
+    elif project_handled:
+        reply = project_reply
         actions = []
     else:
         # Intercept live numeric intents (customer/supplier receivable/payable + top entities)
@@ -3904,6 +3997,13 @@ def send_message(
                 error = str(exc)[:300]
                 frappe.log_error(title="AI Chat Error", message=traceback.format_exc())
                 reply = _humanize_ai_error(exc)
+
+            if not str(reply or "").strip():
+                reply = _build_data_first_fallback_reply(
+                    question=question,
+                    language_hint=language_hint,
+                    mentioned_doctypes=mentioned_dts,
+                )
 
     # Extract numbered pick-lists from the reply and convert them to interactive chips.
     reply, inline_options = _extract_inline_options(reply)

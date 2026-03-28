@@ -1,6 +1,9 @@
 - [x] Fix message segmentation regex in ai_assistant/public/js/ai_chat.js to prevent dropped mid-text content.
 - [x] Keep link rendering behavior while preserving all non-link text slices.
 - [x] Mark task complete after patch.
-- [ ] Add deterministic backend handling for Arabic region/area questions to return explicit area lists.
-- [ ] Improve interactive UX by ensuring structured, clickable options when suitable.
-- [ ] Validate updated response behavior for requested Arabic "regions" style questions.
+- [x] Add deterministic backend handling for Arabic region/area questions to return explicit area lists.
+- [x] Improve interactive UX by ensuring structured, clickable options when suitable.
+- [x] Validate updated response behavior for requested Arabic "regions" style questions.
+- [ ] Add global data-first fallback guard for broad question types to avoid generic empty replies.
+- [ ] Add deterministic project-intent handler (new project) with structured actionable data output.
+- [ ] Add backend tests for generic/business prompts to enforce data-backed structured replies.
