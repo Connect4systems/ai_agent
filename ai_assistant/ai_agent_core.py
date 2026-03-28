@@ -28,8 +28,11 @@ class AIAgentCore:
 
     def _extract_outstanding_value(self, row):
         for key in ("outstanding_amount", "outstanding", "balance", "party_balance"):
+            value = row.get(key)
+            if value in (None, ""):
+                continue
             try:
-                return float(row.get(key) or 0)
+                return float(value)
             except (TypeError, ValueError):
                 continue
         return 0.0
@@ -211,6 +214,7 @@ class AIAgentCore:
             k in normalized_query
             for k in (
                 "suppliers balance",
+                "suppliers balances",
                 "suppliers balanace",
                 "total supplier balance",
                 "total payable balance",
@@ -249,9 +253,31 @@ class AIAgentCore:
             # Do not extract for aggregate intents or for explicit plural aggregate phrasing.
             plural_aggregate_query = any(
                 k in normalized_query
-                for k in ("suppliers balance", "suppliers balanace", "supplier balances", "رصيد الموردين", "اجمالي رصيد الموردين", "إجمالي رصيد الموردين")
+                for k in (
+                    "suppliers balance",
+                    "suppliers balances",
+                    "suppliers balanace",
+                    "supplier balances",
+                    "رصيد الموردين",
+                    "اجمالي رصيد الموردين",
+                    "إجمالي رصيد الموردين",
+                )
             )
-            supplier_raw = None if (aggregate_supplier_balance_intent or plural_aggregate_query) else self.extract_supplier_name(user_query)
+            specific_supplier_patterns = (
+                "supplier balance ",
+                "balance supplier ",
+                "supplier ",
+                "payable ",
+                "outstanding ",
+            )
+            has_specific_supplier_pattern = any(pattern in normalized_query for pattern in specific_supplier_patterns)
+
+            should_extract_supplier_for_specific = (
+                (not aggregate_supplier_balance_intent)
+                and has_specific_supplier_pattern
+                and ("suppliers " not in normalized_query)
+            )
+            supplier_raw = self.extract_supplier_name(user_query) if should_extract_supplier_for_specific else None
             supplier = supplier_raw
 
             # Resolve supplier against Supplier doctype (name/supplier_name)

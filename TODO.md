@@ -7,6 +7,9 @@
 - [x] Add global data-first fallback guard for broad question types to avoid generic empty replies.
 - [x] Add deterministic project-intent handler (new project) with structured actionable data output.
 - [x] Add backend tests for generic/business prompts to enforce data-backed structured replies.
-- [ ] Fix sales aggregates to avoid "غير متوفر" by using robust field fallback logic.
-- [ ] Add deterministic monthly/yearly sales answer path for Arabic/English prompts.
-- [ ] Add tests for sales month/year and Sales Order value this year scenarios.
+- [x] Fix sales aggregates to avoid "غير متوفر" by using robust field fallback logic.
+- [x] Add deterministic monthly/yearly sales answer path for Arabic/English prompts.
+- [x] Add tests for sales month/year and Sales Order value this year scenarios.
+- [ ] Add unified deterministic live-finance handler for Sales/GL/Stock/AR/AP with last-updated + report links.
+- [ ] Route finance intents in send_message to deterministic live handler before generic AI fallback.
+- [ ] Add/extend backend tests for finance intents (Arabic+English) and deterministic output contract.
