@@ -973,6 +973,25 @@ class TestSendMessage(unittest.TestCase):
         self.assertEqual(result["actions"][0]["action"], "open_doctype")
         self.assertEqual(result["actions"][0]["doctype"], "Sales Invoice")
 
+    def test_region_question_returns_deterministic_area_list_without_ai_call(self):
+        self._setup_common_mocks()
+
+        with patch.object(
+            chat,
+            "_get_user_permitted_doctype_index",
+            return_value=[{"doctype": "Lead", "module": "CRM"}],
+        ), patch.object(chat, "_call_ai", side_effect=AssertionError("AI call must be skipped for deterministic regions intent")):
+            result = chat.send_message(
+                "ما هي أهم المناطق حالياً لتسويق أنظمة الطاقة الشمسية؟",
+                session_id="s1",
+                language_hint="ar",
+            )
+
+        self.assertIn("أهم المناطق المقترحة", result["reply"])
+        self.assertIn("- القاهرة الكبرى", result["reply"])
+        self.assertIn("القاهرة الكبرى", result["reply"])
+        self.assertEqual(result["actions"], [])
+
     def test_open_doctype_uses_readable_scope_even_when_context_is_policy_filtered(self):
         settings = _make_settings(require_data_source_policy=1)
         self._setup_common_mocks(settings=settings)

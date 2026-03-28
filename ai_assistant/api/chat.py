@@ -2528,6 +2528,81 @@ def _is_user_stats_question(question: str) -> bool:
     return has_user and has_count
 
 
+def _is_regions_recommendation_question(question: str) -> bool:
+    """Return True when user asks for important regions/areas and expects concrete area names."""
+    q = str(question or "").lower()
+    if not q:
+        return False
+
+    region_tokens = (
+        "region",
+        "regions",
+        "area",
+        "areas",
+        "zone",
+        "zones",
+        "location",
+        "locations",
+        "منطقة",
+        "مناطق",
+        "المنطقة",
+        "المناطق",
+        "مدينة",
+        "مدن",
+        "محافظة",
+        "محافظات",
+    )
+    ranking_tokens = (
+        "top",
+        "best",
+        "important",
+        "priority",
+        "recommended",
+        "target",
+        "main",
+        "key",
+        "اهم",
+        "أهم",
+        "افضل",
+        "أفضل",
+        "مستهدفة",
+        "ترشيح",
+        "مقترحة",
+    )
+
+    return any(t in q for t in region_tokens) and any(t in q for t in ranking_tokens)
+
+
+def _build_regions_recommendation_reply(question: str, language_hint: str | None = None) -> str:
+    """Return a deterministic, user-friendly region list reply for Arabic/English prompts."""
+    prefers_ar = _question_contains_arabic(question) or _normalize_language_hint(language_hint) == "ar"
+
+    if prefers_ar:
+        return (
+            "أهم المناطق المقترحة حالياً:\n"
+            "- القاهرة الكبرى (القاهرة / الجيزة / القليوبية)\n"
+            "- الإسكندرية\n"
+            "- البحيرة\n"
+            "- الدقهلية\n"
+            "- الشرقية\n"
+            "- الغربية\n\n"
+            "سبب الاختيار باختصار: كثافة سكانية عالية + نشاط عمراني وتجاري + طلب متزايد على خفض تكلفة الكهرباء.\n"
+            "إذا رغبت، أقدر أكمل لك بخطة دخول سوق مختصرة لكل منطقة (قنوات البيع، نوع العملاء، أولوية التنفيذ)."
+        )
+
+    return (
+        "Top recommended regions right now:\n"
+        "- Greater Cairo (Cairo / Giza / Qalyubia)\n"
+        "- Alexandria\n"
+        "- Beheira\n"
+        "- Dakahlia\n"
+        "- Sharqia\n"
+        "- Gharbia\n\n"
+        "Why these: high population density + active commercial/residential demand + growing need to reduce electricity costs.\n"
+        "If you want, I can provide a short go-to-market plan per region (channels, customer segments, and rollout priority)."
+    )
+
+
 def _build_user_stats_context(question: str, user: str) -> str:
     """Return authoritative active/disabled user counts, excluding system accounts."""
     if not _is_user_stats_question(question):
@@ -3728,9 +3803,15 @@ def send_message(
         language_hint=language_hint,
     )
 
+    region_handled = _is_regions_recommendation_question(question)
+    region_reply = _build_regions_recommendation_reply(question, language_hint=language_hint) if region_handled else ""
+
     if nav_handled:
         reply = nav_reply
         actions = nav_actions
+    elif region_handled:
+        reply = region_reply
+        actions = []
     else:
         # Intercept live numeric intents (customer/supplier receivable/payable + top entities)
         # and execute deterministic ai_agent_core path before generic LLM flow.

@@ -1,3 +1,6 @@
 - [x] Fix message segmentation regex in ai_assistant/public/js/ai_chat.js to prevent dropped mid-text content.
 - [x] Keep link rendering behavior while preserving all non-link text slices.
 - [x] Mark task complete after patch.
+- [ ] Add deterministic backend handling for Arabic region/area questions to return explicit area lists.
+- [ ] Improve interactive UX by ensuring structured, clickable options when suitable.
+- [ ] Validate updated response behavior for requested Arabic "regions" style questions.
