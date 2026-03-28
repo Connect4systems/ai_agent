@@ -1223,7 +1223,7 @@
     function splitMessageIntoSegments(text) {
         const source = String(text || "");
         const segments = [];
-        const pattern = /(https?:\/\/[^\s|]+|\/?(?:app|desk|files|api)\/[^|\n\r]+)/gi;
+        const pattern = /(https?:\/\/[^\s]+|\/?(?:app|desk|files|api)\/[^\s]+)/gi;
 
         let cursor = 0;
         let match;
@@ -1236,16 +1236,26 @@
                 segments.push({ type: "text", value: source.slice(cursor, start) });
             }
 
-            const rawLink = String(match[0] || "");
-            const href = normalizeMessageLink(rawLink);
+            const rawMatch = String(match[0] || "");
+            const trimmed = rawMatch.trim();
+
+            // Split trailing punctuation so it stays visible as plain text
+            const trailingMatch = trimmed.match(/([.,;:!؟،)\]}]+)$/);
+            const trailing = trailingMatch ? trailingMatch[1] : "";
+            const candidate = trailing ? trimmed.slice(0, -trailing.length) : trimmed;
+
+            const href = normalizeMessageLink(candidate);
             if (href) {
-                let label = rawLink.trim().replace(/\s{2,}/g, " ");
+                let label = candidate.replace(/\s{2,}/g, " ");
                 if (/^(app|desk|files|api)\//i.test(label)) {
                     label = `/${label}`;
                 }
                 segments.push({ type: "link", value: label, href: href });
+                if (trailing) {
+                    segments.push({ type: "text", value: trailing });
+                }
             } else {
-                segments.push({ type: "text", value: rawLink });
+                segments.push({ type: "text", value: rawMatch });
             }
 
             cursor = end;
